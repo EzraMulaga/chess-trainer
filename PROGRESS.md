@@ -38,3 +38,29 @@
   insert/read, cascade delete, CHECK constraint rejection) — all passing.
   Verified `scripts/init_db.py` end-to-end against a real file, inspected
   with `sqlite3 .tables` / `.schema`.
+
+## Phase 2 — Repertoire ingestion (complete)
+
+- `chess_trainer/repertoire.py`: `import_pgn()` (PGN mainline → chained
+  `repertoire_positions` rows, defaults to `status='approved'` since these
+  are lines the user already chose), `generate_candidates()` (Stockfish
+  `multipv` breadth-first expansion from a seed FEN, status `'pending'`),
+  `list_pending()` / `set_status()` / `line_to_root()` for the
+  approve/reject workflow.
+- Pruning defaults settled without further input (flagged as tunable, not
+  asked again): `max_ply=4`, `multipv=2`, `eval_drop_cp=50`,
+  `search_depth=18`, `max_candidates=50` safety cap. All overridable via
+  CLI flags on `scripts/generate_candidates.py`.
+- Eval-drop comparison uses each node's `score.relative` (mover's point of
+  view, matches multipv's best-first ordering); stored `eval_cp`/`eval_mate`
+  stay in White's-perspective convention per the schema comment.
+- CLI: `scripts/import_pgn.py`, `scripts/generate_candidates.py`,
+  `scripts/review_candidates.py` (interactive a/r/s prompt per pending
+  candidate, shows the SAN line leading to it).
+- `tests/test_repertoire.py`: 5 tests, including a live-Stockfish
+  `generate_candidates` test (skipped if `stockfish` isn't on PATH). Also
+  ran the full pipeline by hand against a real db file: imported a 5-move
+  London PGN (10 rows, all approved), generated 6 candidates from a
+  mid-line seed (multipv=2, depth=2, capped at 8), approved/rejected via
+  the CLI prompt — final table state inspected with `sqlite3` and matched
+  expectations exactly.
