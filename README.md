@@ -47,6 +47,25 @@ This checks your Python version, confirms `python-chess` is importable, and
 launches Stockfish via UCI to run a quick analysis — confirming the full
 engine pipeline works before any application code is built on top of it.
 
+## Running the API server
+
+```bash
+python scripts/init_db.py          # first time only, creates data/chess_trainer.db
+uvicorn chess_trainer.api:app --reload
+```
+
+Interactive API docs at `http://127.0.0.1:8000/docs`. `DB_PATH` and
+`STOCKFISH_PATH` env vars override the defaults (gitignored `data/`
+directory, `stockfish` on `PATH`).
+
+## CLI tools
+
+- `scripts/import_pgn.py <pgn_file> <repertoire_label>`
+- `scripts/generate_candidates.py <seed_fen> <repertoire_label>`
+- `scripts/review_candidates.py [repertoire_label]` — approve/reject prompt
+- `scripts/drill.py [repertoire_label]` — SRS drill loop
+- `scripts/review_game.py <pgn_file>` — per-move game review table
+
 ## Status
 
-Phase 0: environment setup. See [PROGRESS.md](PROGRESS.md).
+Phase 5: FastAPI backend. See [PROGRESS.md](PROGRESS.md).

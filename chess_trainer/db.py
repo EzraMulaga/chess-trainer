@@ -10,7 +10,11 @@ DEFAULT_DB_PATH = Path(__file__).parent.parent / "data" / "chess_trainer.db"
 def get_connection(db_path: Union[str, Path] = DEFAULT_DB_PATH) -> sqlite3.Connection:
     if str(db_path) != ":memory:":
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(db_path)
+    # check_same_thread=False: FastAPI dispatches sync dependencies/endpoints
+    # via a thread pool, so the thread that opens a connection isn't
+    # guaranteed to be the one that uses it. Usage within one request stays
+    # sequential, so this is safe despite lifting sqlite3's default guard.
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON")
     conn.row_factory = sqlite3.Row
     return conn

@@ -118,3 +118,32 @@
   scripted queen blunder (2...Qh5 3.Qxe5?? Nxe5) that must classify as
   'blunder'. Verified `scripts/review_game.py` by hand against the same
   game — the CLI table and persisted `game_moves` rows both matched.
+
+## Phase 5 — FastAPI backend (complete)
+
+- `chess_trainer/api.py`: thin HTTP wrapper over Phases 2-4, no new
+  business logic. Endpoints: `/health`, `/repertoire/import-pgn`,
+  `/repertoire/generate-candidates`, `/repertoire/pending`,
+  `/repertoire/positions/{id}/status`, `/repertoire/positions/{id}/line`,
+  `/drill/due`, `/drill/positions/{id}/answer`, `/games/review`,
+  `/games/{id}`. `DB_PATH` / `STOCKFISH_PATH` env vars override the
+  CLI-script defaults.
+- Found and fixed a real bug while wiring this up (not just a test
+  artifact): FastAPI dispatches sync dependencies and sync endpoints via a
+  thread pool, so the OS thread that opens a DB connection in `get_db()`
+  isn't guaranteed to be the same thread the endpoint runs on — sqlite3
+  rejects that by default. Fixed in `chess_trainer/db.py` by passing
+  `check_same_thread=False` to `sqlite3.connect()`; safe here because
+  usage within one request stays sequential, never concurrent.
+- `tests/test_api.py`: 9 tests via `fastapi.testclient.TestClient`, with
+  `get_db` overridden to share one in-memory connection across a test's
+  requests (a fresh `:memory:` connection per request would each be a
+  separate empty database). Covers the full import → drill → answer
+  flow, status transitions + 400/404s, a 503 when Stockfish is
+  unavailable (dependency override), and live-Stockfish tests for
+  candidate generation and game review (skipped without a stockfish
+  binary on PATH).
+- Verified beyond the test client: ran `uvicorn chess_trainer.api:app`
+  for real and hit `/health`, `/repertoire/import-pgn`, `/drill/due`,
+  `/drill/positions/{id}/answer`, and `/games/review` with `curl` against
+  a live server — all matched the CLI/test behavior.
