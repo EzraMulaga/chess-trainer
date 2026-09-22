@@ -20,3 +20,21 @@
   the former Phase 7 (Polish/stats/README) to Phase 8. Repo/package will
   go public at Phase 7. No code changes yet — this phase is future work,
   still on Phase 1 next.
+
+## Phase 1 — SQLite schema (complete)
+
+- `chess_trainer/schema.sql`: `repertoire_positions`, `srs_state`,
+  `review_history`, `games`, `game_moves`. Resolved the open decision from
+  PLAN.md: `srs_state` is its own table keyed by `position_id` (FK to
+  `repertoire_positions`, cascading delete), not columns bolted onto the
+  position row.
+- Position identity uses EPD (FEN without halfmove/fullmove counters), so
+  the same opening position reached at different points in time still
+  compares equal.
+- `chess_trainer/db.py`: `get_connection()` / `init_db()`.
+  `scripts/init_db.py`: CLI entry point, defaults to
+  `data/chess_trainer.db` (gitignored).
+- `tests/test_db.py`: 4 tests (table creation, one-row-per-table
+  insert/read, cascade delete, CHECK constraint rejection) — all passing.
+  Verified `scripts/init_db.py` end-to-end against a real file, inspected
+  with `sqlite3 .tables` / `.schema`.
