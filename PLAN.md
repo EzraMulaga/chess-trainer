@@ -11,6 +11,11 @@ Chart.js) served from FastAPI's static files. Lichess API integration for
 real-game move-frequency stats is a possible future addition, not required
 for core functionality.
 
+Distribution: packaged as a Docker image (Stockfish baked in, no host
+install needed) and published to GitHub Container Registry (GHCR) via
+GitHub Actions, so it's a one-line `docker run` for anyone. This means the
+repo/package goes public at that point — see Phase 7.
+
 Commit at each phase boundary: `Phase N: <summary>`. Update
 [PROGRESS.md](PROGRESS.md) alongside each commit.
 
@@ -102,7 +107,32 @@ repertoire browser, game review view.
 Exit criteria: manually exercised in a browser against the local server —
 drill a due position, browse repertoire, review a pasted game.
 
-## Phase 7 — Polish, stats, README
+## Phase 7 — Dockerize + publish to GHCR
+
+- `Dockerfile`: `python:3.12-slim` base, `apt-get install stockfish`
+  (Debian ships it in `main`, no extra repo needed), install
+  `requirements.txt`, copy app code, run via `uvicorn`. SQLite file lives
+  under a `/data` volume mount so it persists across container recreation
+  and isn't baked into the image.
+- `docker-compose.yml`: single service, `./data:/data` volume, port
+  `8000:8000`, `DB_PATH=/data/chess_trainer.db` env var — one-command local
+  run (`docker compose up`) as an alternative to the venv workflow.
+- `.github/workflows/docker-publish.yml`: on tagged release, build and push
+  `ghcr.io/<owner>/chess-trainer:<tag>` + `:latest` using
+  `docker/build-push-action`, authenticated with the workflow's
+  `GITHUB_TOKEN` (`packages: write` permission) — no manual credentials.
+- Repo/package visibility flips to **public** at this phase (required for
+  others to `docker pull` from GHCR). Sanity-check before flipping: no
+  secrets in history, `data/` stays gitignored so no personal SQLite/game
+  data ever gets committed.
+- README gets a "Run with Docker" section: `docker run` one-liner as the
+  primary quickstart, venv instructions kept as the dev/contributor path.
+
+Exit criteria: `docker compose up` runs the full app locally from a clean
+clone with no host Python/Stockfish install; a tagged push produces a
+pullable `ghcr.io` image; repo is public.
+
+## Phase 8 — Polish, stats, README
 
 Stats dashboard (retention rate, drill streaks, blunder frequency trends),
 final README pass, PROGRESS.md wrap-up.
@@ -115,3 +145,5 @@ final README pass, PROGRESS.md wrap-up.
 - Engine-generated line pruning thresholds (Phase 2).
 - Move classification centipawn bands + brilliant-move heuristic specifics
   (Phase 4).
+- Docker image tagging scheme (semver tags vs. `latest`-only) and whether
+  `data/` should support a bind mount default vs. named volume (Phase 7).

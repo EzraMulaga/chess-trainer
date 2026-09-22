@@ -13,3 +13,10 @@
 - `scripts/verify_env.py` passes cleanly: Python 3.14.4, python-chess
   1.11.2, Stockfish at `/usr/games/stockfish`, live UCI analysis on the
   startpos (depth 15, score +39, bestmove e2e4).
+
+## Plan update — 2026-09-22
+
+- Added Phase 7 (Dockerize + publish to GHCR via GitHub Actions), pushing
+  the former Phase 7 (Polish/stats/README) to Phase 8. Repo/package will
+  go public at Phase 7. No code changes yet — this phase is future work,
+  still on Phase 1 next.
