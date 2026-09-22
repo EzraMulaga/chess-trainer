@@ -243,7 +243,13 @@
   a restart — all through the actual running container, same as the
   "docker compose up runs the full app locally... a tagged push produces
   a pullable ghcr.io image" exit criteria.
-- **Not done yet**: flipping the repo/package to public and pushing a
-  version tag to actually trigger the GHCR publish. That's the
-  consequential, hard-to-reverse part of this phase — held for explicit
-  confirmation before acting.
+- Confirmed with the user before the consequential step: repo was already
+  public (unexpected given earlier context saying private — user confirmed
+  that was intentional on their end). Pushed 6 local commits to
+  `origin/main`, tagged `v0.1.0`, pushed the tag. The workflow ran and
+  succeeded in ~1 minute. Verified the published image for real, not just
+  the workflow's green checkmark: pulled `ghcr.io/ezramulaga/chess-trainer:latest`
+  fresh (after removing all local images), ran it standalone, and hit
+  `/health` and `/` successfully — proving it's genuinely public and
+  pullable, matching the "a tagged push produces a pullable ghcr.io image"
+  exit criteria exactly.
