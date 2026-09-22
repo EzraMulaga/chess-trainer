@@ -89,3 +89,32 @@
   Also ran `scripts/drill.py` by hand against a real db (3 correct + 1
   incorrect answer) and confirmed `srs_state`/`review_history` matched the
   SM-2 math exactly via `sqlite3`.
+
+## Phase 4 — Game review pipeline (complete)
+
+- `chess_trainer/review.py`: `review_game()` walks a PGN's mainline,
+  analysing each position with Stockfish once (reuses the "after" analysis
+  of move N as the "before" analysis of move N+1, halving engine calls).
+  `classify()` uses fixed centipawn-loss bands, measured from the mover's
+  own perspective so White/Black are handled identically: best ≤20cp,
+  excellent ≤50cp, inaccuracy ≤100cp, mistake ≤200cp, blunder beyond that.
+  Mate scores are folded onto the same integer scale via a 100,000cp
+  sentinel rather than special-cased, keeping the classification math
+  uniform. All thresholds live in `ReviewConfig`, picked as reasonable
+  defaults per PLAN.md rather than settled with further back-and-forth —
+  tunable later if they feel off in practice.
+- "Brilliant" heuristic (`_maybe_upgrade_to_brilliant`, best-effort per
+  PLAN.md): only applies to already-sound (best/excellent) moves that
+  aren't forced (>1 legal move available), and requires a genuine net
+  material sacrifice (≥300cp) still standing after the opponent's engine-
+  suggested best reply two plies out.
+- `scripts/review_game.py`: CLI — prints a per-move eval/delta/
+  classification table plus a summary count, persists to `games` +
+  `game_moves`.
+- `tests/test_review.py`: 6 tests — classification band edges, three
+  brilliant-heuristic branches (genuine sacrifice / no sacrifice / forced
+  move) using hand-built positions and fabricated engine replies (no
+  engine needed for these), plus a live-Stockfish end-to-end test using a
+  scripted queen blunder (2...Qh5 3.Qxe5?? Nxe5) that must classify as
+  'blunder'. Verified `scripts/review_game.py` by hand against the same
+  game — the CLI table and persisted `game_moves` rows both matched.
