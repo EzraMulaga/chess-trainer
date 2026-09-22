@@ -64,3 +64,28 @@
   mid-line seed (multipv=2, depth=2, capped at 8), approved/rejected via
   the CLI prompt — final table state inspected with `sqlite3` and matched
   expectations exactly.
+
+## Phase 3 — SRS drill engine (complete)
+
+- `chess_trainer/srs.py`: `sm2()` (pure SM-2 function, quality 0-5, ease
+  floored at 1.3), `sync_srs_state()` (creates `srs_state` rows for
+  newly-approved, non-root positions — called automatically at the start
+  of a drill session rather than needing a manual step), `get_due_positions()`,
+  `board_before_move()` (reconstructs the pre-move board from the parent's
+  stored EPD), `check_answer()` (accepts SAN or UCI), `grade_review()`
+  (updates `srs_state` + logs `review_history`).
+  Timestamps standardized on SQLite's `CURRENT_TIMESTAMP` string format
+  (space-separated, no timezone) throughout, to avoid a format mismatch
+  between DB-defaulted and Python-computed `due_at` values that would have
+  broken due-date ordering.
+- `scripts/drill.py`: CLI loop — shows the board, takes a move guess,
+  correct answers prompt for an SM-2 quality (3-5, default 4), incorrect
+  answers auto-grade 0 (no point asking a human to rate a wrong answer's
+  difficulty).
+- `tests/test_srs.py`: 13 tests. SM-2 verified against hand-computed
+  reference sequences (successful-review chain 2.5→2.6→2.7→2.8, EF-neutral
+  quality-4 grade, EF floor at 1.3, failing-grade reset, out-of-range
+  quality rejection), plus DB-level tests for sync/due-query/grading.
+  Also ran `scripts/drill.py` by hand against a real db (3 correct + 1
+  incorrect answer) and confirmed `srs_state`/`review_history` matched the
+  SM-2 math exactly via `sqlite3`.
