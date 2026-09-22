@@ -6,6 +6,7 @@ Shows the board before each due move, accepts a SAN or UCI guess, grades
 recall (correct guesses ask for a quality of 3-5, wrong guesses auto-grade
 0), and updates the SM-2 schedule.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -23,7 +24,7 @@ from chess_trainer.srs import (  # noqa: E402
 
 def main() -> int:
     repertoire = sys.argv[1] if len(sys.argv) > 1 else None
-    db_path = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_DB_PATH
+    db_path = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("DB_PATH", str(DEFAULT_DB_PATH))
 
     conn = get_connection(db_path)
     created = sync_srs_state(conn, repertoire)

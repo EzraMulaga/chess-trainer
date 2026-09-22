@@ -5,6 +5,7 @@ Run with:
       [--search-depth N] [--db PATH]
 """
 import argparse
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -26,12 +27,16 @@ def _format_eval(cp, mate) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pgn_file")
-    parser.add_argument("--stockfish", default=None, help="path to stockfish binary (default: PATH lookup)")
+    parser.add_argument(
+        "--stockfish",
+        default=None,
+        help="path to stockfish binary (default: $STOCKFISH_PATH, then PATH lookup)",
+    )
     parser.add_argument("--search-depth", type=int, default=16)
-    parser.add_argument("--db", default=str(DEFAULT_DB_PATH))
+    parser.add_argument("--db", default=os.environ.get("DB_PATH", str(DEFAULT_DB_PATH)))
     args = parser.parse_args()
 
-    engine_path = args.stockfish or shutil.which("stockfish")
+    engine_path = args.stockfish or os.environ.get("STOCKFISH_PATH") or shutil.which("stockfish")
     if not engine_path:
         print("Stockfish not found on PATH; pass --stockfish /path/to/stockfish")
         return 1

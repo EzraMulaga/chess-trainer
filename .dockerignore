@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/
+.git/
+.github/
+tests/
+*.egg-info/
+.env
+README.md
+PLAN.md
+PROGRESS.md

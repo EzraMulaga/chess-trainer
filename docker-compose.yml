@@ -1,0 +1,10 @@
+services:
+  chess-trainer:
+    build: .
+    image: chess-trainer:local
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      - DB_PATH=/data/chess_trainer.db

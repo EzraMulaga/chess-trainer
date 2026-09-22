@@ -192,3 +192,58 @@
   through the UI, and ran a full game review confirming the blunder
   classification, eval chart, and click-to-see-board all rendered
   correctly. Screenshots inspected directly, not just asserted on.
+
+## Phase 7 — Dockerize + publish to GHCR (complete)
+
+- `Dockerfile`: `python:3.12-slim` + `apt-get install stockfish`, installs
+  `requirements.txt`, copies `chess_trainer/`/`static/`/`scripts/`, bakes
+  in `DB_PATH=/data/chess_trainer.db` and `STOCKFISH_PATH=/usr/games/stockfish`
+  as defaults, `/data` declared as a volume, healthcheck against
+  `/health`. `CMD` runs `scripts/init_db.py` (idempotent —
+  `CREATE TABLE IF NOT EXISTS` throughout) before `uvicorn`, so the schema
+  is always present on boot without a separate manual step.
+- `docker-compose.yml`: single service, `./data:/data` bind mount, port
+  `8000:8000`. `.dockerignore` keeps `venv/`, `.git/`, `tests/`, etc. out
+  of the build context.
+- **Two real bugs found by actually building and running the container**,
+  not caught by the existing test suite (which never runs against a
+  container):
+  1. `scripts/init_db.py` ignored the `DB_PATH` env var entirely, only
+     checking `sys.argv`. Inside the container this meant the schema got
+     created at `/app/data/chess_trainer.db` (the package-relative
+     default) while `chess_trainer/api.py` correctly read `/data/...` from
+     `DB_PATH` — two different files, neither matching what the other
+     expected, and the one actually mounted as a volume (`/data`) stayed
+     empty. Confirmed via `docker exec` inspection before fixing.
+  2. `scripts/generate_candidates.py` and `scripts/review_game.py` looked
+     up Stockfish via `shutil.which("stockfish")` only, never checking
+     `STOCKFISH_PATH`. Debian installs Stockfish to `/usr/games/stockfish`,
+     and `/usr/games` isn't on `PATH` in a minimal non-login container
+     shell — confirmed via `docker exec sh -c 'echo $PATH'`. Anyone
+     `docker exec`-ing in to use these CLI tools directly would have hit
+     "Stockfish not found" despite `STOCKFISH_PATH` being set correctly.
+  Fixed all five CLI scripts (`init_db.py`, `import_pgn.py`, `drill.py`,
+  `review_candidates.py`, `generate_candidates.py`, `review_game.py`) to
+  check the env var first, consistent with the pattern `api.py` already
+  used. Re-verified: rebuilt, confirmed the db now lands in the mounted
+  `/data` volume, and confirmed data survives a full `docker compose down`
+  + `up` (container recreation) — a game reviewed before the restart was
+  still readable after.
+- `.github/workflows/docker-publish.yml`: on a `v*.*.*` tag push, builds
+  and pushes `ghcr.io/<owner>/chess-trainer:latest` +
+  `:<version>` via `docker/build-push-action`, authenticated with the
+  workflow's own `GITHUB_TOKEN` (no manual secrets).
+- README restructured: "Run with Docker" is now the primary quickstart
+  (`docker run` one-liner, or `docker compose up`), venv instructions
+  moved to a "Development setup (without Docker)" section.
+- Verified end-to-end against the built image (not just `docker build`
+  succeeding): imported a PGN via the API, ran a live-Stockfish game
+  review through the container and got the correct blunder classification
+  back, confirmed the frontend is served, and confirmed persistence across
+  a restart — all through the actual running container, same as the
+  "docker compose up runs the full app locally... a tagged push produces
+  a pullable ghcr.io image" exit criteria.
+- **Not done yet**: flipping the repo/package to public and pushing a
+  version tag to actually trigger the GHCR publish. That's the
+  consequential, hard-to-reverse part of this phase — held for explicit
+  confirmation before acting.

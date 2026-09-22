@@ -9,6 +9,7 @@ Run with:
       [--search-depth N] [--max-candidates N] [--db PATH]
 """
 import argparse
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -24,7 +25,9 @@ def main() -> int:
     parser.add_argument("seed_fen")
     parser.add_argument("repertoire")
     parser.add_argument(
-        "--stockfish", default=None, help="path to stockfish binary (default: PATH lookup)"
+        "--stockfish",
+        default=None,
+        help="path to stockfish binary (default: $STOCKFISH_PATH, then PATH lookup)",
     )
     parser.add_argument("--max-ply", type=int, default=4, help="plies beyond the seed to expand")
     parser.add_argument("--multipv", type=int, default=2, help="candidate moves per position")
@@ -33,10 +36,10 @@ def main() -> int:
     )
     parser.add_argument("--search-depth", type=int, default=18)
     parser.add_argument("--max-candidates", type=int, default=50, help="safety cap on total nodes")
-    parser.add_argument("--db", default=str(DEFAULT_DB_PATH))
+    parser.add_argument("--db", default=os.environ.get("DB_PATH", str(DEFAULT_DB_PATH)))
     args = parser.parse_args()
 
-    engine_path = args.stockfish or shutil.which("stockfish")
+    engine_path = args.stockfish or os.environ.get("STOCKFISH_PATH") or shutil.which("stockfish")
     if not engine_path:
         print("Stockfish not found on PATH; pass --stockfish /path/to/stockfish")
         return 1

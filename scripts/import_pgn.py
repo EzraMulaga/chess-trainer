@@ -2,6 +2,7 @@
 
 Run with: python scripts/import_pgn.py <pgn_file> <repertoire_label> [db_path]
 """
+import os
 import sys
 from pathlib import Path
 
@@ -16,7 +17,7 @@ def main() -> int:
         print("usage: python scripts/import_pgn.py <pgn_file> <repertoire_label> [db_path]")
         return 1
     pgn_path, repertoire = sys.argv[1], sys.argv[2]
-    db_path = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_DB_PATH
+    db_path = sys.argv[3] if len(sys.argv) > 3 else os.environ.get("DB_PATH", str(DEFAULT_DB_PATH))
 
     pgn_text = Path(pgn_path).read_text()
     conn = get_connection(db_path)

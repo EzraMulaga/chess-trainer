@@ -21,14 +21,34 @@ no subscriptions, no external API dependency for core functionality.
 See [PLAN.md](PLAN.md) for the phased build order and
 [PROGRESS.md](PROGRESS.md) for the current status.
 
-## Requirements
+## Run with Docker
+
+No Python or Stockfish install needed — both are baked into the image.
+
+```bash
+docker run -d -p 8000:8000 -v "$(pwd)/data:/data" ghcr.io/ezramulaga/chess-trainer:latest
+```
+
+Or with the repo checked out:
+
+```bash
+docker compose up
+```
+
+Either way, open `http://127.0.0.1:8000/`. `./data` on the host holds the
+SQLite file, so it survives container restarts/recreation. Set `DB_PATH`
+to change where the db file lives inside the container.
+
+Images are published to GHCR on tagged releases
+(`.github/workflows/docker-publish.yml`) — `:latest` plus a `:vX.Y.Z` tag
+per release.
+
+## Development setup (without Docker)
 
 - Python 3.10+
 - [Stockfish](https://stockfishchess.org/) engine binary on `PATH` (or set
   `STOCKFISH_PATH`)
 - `python3-venv` (Debian/Ubuntu: `sudo apt install python3-venv stockfish`)
-
-## Setup
 
 ```bash
 sudo apt install python3-venv stockfish   # if not already installed
@@ -74,4 +94,4 @@ at runtime.
 
 ## Status
 
-Phase 6: local web frontend. See [PROGRESS.md](PROGRESS.md).
+Phase 7: Dockerize + publish to GHCR. See [PROGRESS.md](PROGRESS.md).

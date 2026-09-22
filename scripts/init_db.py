@@ -3,6 +3,7 @@
 Run with: python scripts/init_db.py [path/to/db]
 Defaults to data/chess_trainer.db (gitignored).
 """
+import os
 import sys
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from chess_trainer.db import DEFAULT_DB_PATH, get_connection, init_db  # noqa: E
 
 
 def main() -> int:
-    db_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_DB_PATH
+    db_path = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("DB_PATH", str(DEFAULT_DB_PATH))
     conn = get_connection(db_path)
     init_db(conn)
     conn.close()

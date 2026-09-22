@@ -5,6 +5,7 @@ Run with: python scripts/review_candidates.py [repertoire_label] [db_path]
 For each pending position, shows the line leading to it and prompts
 a(pprove) / r(eject) / s(kip).
 """
+import os
 import sys
 from pathlib import Path
 
@@ -21,7 +22,7 @@ def _format_line(chain) -> str:
 
 def main() -> int:
     repertoire = sys.argv[1] if len(sys.argv) > 1 else None
-    db_path = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_DB_PATH
+    db_path = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("DB_PATH", str(DEFAULT_DB_PATH))
 
     conn = get_connection(db_path)
     pending = list_pending(conn, repertoire)
