@@ -6,9 +6,12 @@ chess_trainer.repertoire / .srs / .review.
 import os
 import shutil
 import sqlite3
+from pathlib import Path
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from chess_trainer.db import DEFAULT_DB_PATH, get_connection
@@ -18,8 +21,16 @@ from chess_trainer.srs import board_before_move, check_answer, get_due_positions
 
 DB_PATH = os.environ.get("DB_PATH", str(DEFAULT_DB_PATH))
 STOCKFISH_PATH = os.environ.get("STOCKFISH_PATH") or shutil.which("stockfish")
+STATIC_DIR = Path(__file__).parent.parent / "static"
 
 app = FastAPI(title="Chess Trainer API")
+
+if STATIC_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def root():
+        return RedirectResponse(url="/static/index.html")
 
 
 def get_db():

@@ -44,6 +44,32 @@ def test_health(client):
     assert resp.json() == {"status": "ok"}
 
 
+def test_root_redirects_to_static_index(client):
+    resp = client.get("/", follow_redirects=False)
+    assert resp.status_code in (307, 308)
+    assert resp.headers["location"] == "/static/index.html"
+
+
+def test_static_frontend_assets_are_served(client):
+    for path in [
+        "/static/index.html",
+        "/static/css/app.css",
+        "/static/js/api.js",
+        "/static/js/drill.js",
+        "/static/js/repertoire.js",
+        "/static/js/review.js",
+        "/static/js/app.js",
+        "/static/vendor/jquery-3.7.1.min.js",
+        "/static/vendor/chess.min.js",
+        "/static/vendor/chessboard-1.0.0.min.js",
+        "/static/vendor/chessboard-1.0.0.min.css",
+        "/static/vendor/chart.umd.min.js",
+        "/static/vendor/img/chesspieces/wikipedia/wP.png",
+    ]:
+        resp = client.get(path)
+        assert resp.status_code == 200, f"{path} returned {resp.status_code}"
+
+
 def test_import_pgn_then_list_pending_is_empty(client):
     resp = client.post("/repertoire/import-pgn", json={"pgn": LONDON_PGN, "repertoire": "white_london"})
     assert resp.status_code == 200

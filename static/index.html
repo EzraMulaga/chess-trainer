@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chess Trainer</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="vendor/chessboard-1.0.0.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header>
+    <h1>Chess Trainer</h1>
+    <nav>
+      <button class="tab-btn active" data-tab="drill">Drill</button>
+      <button class="tab-btn" data-tab="repertoire">Repertoire</button>
+      <button class="tab-btn" data-tab="review">Game Review</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-drill" class="tab-panel active">
+      <h2>SRS Drill</h2>
+      <div class="controls">
+        <label>Repertoire
+          <input id="drill-repertoire" type="text" placeholder="e.g. white_london (blank = all)">
+        </label>
+        <button id="drill-load-btn">Load due positions</button>
+      </div>
+      <div id="drill-board"></div>
+      <div id="drill-feedback">Click "Load due positions" to start a session.</div>
+    </section>
+
+    <section id="tab-repertoire" class="tab-panel">
+      <h2>Repertoire</h2>
+
+      <fieldset>
+        <legend>Import PGN</legend>
+        <form id="import-form">
+          <div class="controls">
+            <label>Repertoire label
+              <input id="import-repertoire" type="text" placeholder="white_london" required>
+            </label>
+          </div>
+          <textarea id="import-pgn-text" placeholder="1. d4 d5 2. Bf4 ..." required></textarea>
+          <div class="controls">
+            <button type="submit">Import</button>
+            <span id="import-status"></span>
+          </div>
+        </form>
+      </fieldset>
+
+      <fieldset>
+        <legend>Generate engine candidates</legend>
+        <form id="generate-form">
+          <div class="controls">
+            <label>Seed FEN
+              <input id="generate-fen" type="text" size="50" placeholder="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" required>
+            </label>
+          </div>
+          <div class="controls">
+            <label>Repertoire label
+              <input id="generate-repertoire" type="text" placeholder="white_london" required>
+            </label>
+          </div>
+          <div class="controls">
+            <label>Max ply <input id="generate-max-ply" type="text" value="4" size="3"></label>
+            <label>Multipv <input id="generate-multipv" type="text" value="2" size="3"></label>
+            <label>Eval drop (cp) <input id="generate-eval-drop" type="text" value="50" size="4"></label>
+            <label>Depth <input id="generate-depth" type="text" value="18" size="3"></label>
+            <label>Max candidates <input id="generate-max-candidates" type="text" value="50" size="4"></label>
+          </div>
+          <div class="controls">
+            <button type="submit">Generate</button>
+            <span id="generate-status"></span>
+          </div>
+        </form>
+      </fieldset>
+
+      <fieldset>
+        <legend>Pending candidates</legend>
+        <div class="controls">
+          <label>Repertoire
+            <input id="pending-repertoire" type="text" placeholder="blank = all">
+          </label>
+          <button id="pending-load-btn">Refresh</button>
+        </div>
+        <ul id="pending-list"></ul>
+      </fieldset>
+    </section>
+
+    <section id="tab-review" class="tab-panel">
+      <h2>Game Review</h2>
+      <form id="review-form">
+        <textarea id="review-pgn-text" placeholder="Paste a full PGN here" required></textarea>
+        <div class="controls">
+          <label>Search depth <input id="review-depth" type="text" value="16" size="3"></label>
+          <button type="submit">Review</button>
+          <span id="review-status"></span>
+        </div>
+      </form>
+      <div id="review-summary"></div>
+      <div id="review-board"></div>
+      <canvas id="eval-chart" height="80"></canvas>
+      <table id="review-table">
+        <thead>
+          <tr><th>Ply</th><th>Move</th><th>Before</th><th>After</th><th>Classification</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="vendor/jquery-3.7.1.min.js"></script>
+  <script src="vendor/chess.min.js"></script>
+  <script src="vendor/chessboard-1.0.0.min.js"></script>
+  <script src="vendor/chart.umd.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/drill.js"></script>
+  <script src="js/repertoire.js"></script>
+  <script src="js/review.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

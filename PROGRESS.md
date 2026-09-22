@@ -147,3 +147,48 @@
   for real and hit `/health`, `/repertoire/import-pgn`, `/drill/due`,
   `/drill/positions/{id}/answer`, and `/games/review` with `curl` against
   a live server — all matched the CLI/test behavior.
+
+## Phase 6 — Local web frontend (complete)
+
+- `static/`: plain HTML/CSS/vanilla-JS app, no build step. Three tabs —
+  Drill, Repertoire, Game Review — served via FastAPI's `StaticFiles`
+  mount at `/static`, with `/` redirecting to `/static/index.html`
+  (`chess_trainer/api.py`).
+- Vendored locally under `static/vendor/` (fetched at build time, loaded
+  from disk at runtime, no CDN dependency): chessboard.js 1.0.0 + its 12
+  wikipedia-set piece sprites, chess.js 0.10.3 (the version chessboard.js's
+  official examples pair with), jQuery 3.7.1, Chart.js 4.5.1.
+- Drill view: chessboard.js drag-and-drop, chess.js validates legality
+  client-side (snaps back illegal drops), a legal drop submits straight to
+  `/drill/positions/{id}/answer` — no separate submit button. Board
+  orientation is derived from the FEN's side-to-move field.
+- Repertoire view: PGN import form, candidate-generation form (all
+  `CandidateConfig` knobs exposed), pending-candidates list with
+  approve/reject buttons — a browser port of `scripts/review_candidates.py`.
+- Game review view: results table color-coded by classification, a
+  Chart.js eval-over-time line chart, and a small board that updates on
+  row click. The review API only returns evals/classifications (no FEN
+  per move), so the board is reconstructed client-side by replaying the
+  returned `move_uci` sequence through chess.js — no backend change
+  needed for this.
+- **Real bug found and fixed via browser testing, not caught by curl or
+  the Python test suite**: chessboard.js 1.0.0 requires jQuery as an
+  undocumented-in-my-notes peer dependency (`$.fn` extension pattern
+  internally). Without it, `Chessboard(...)` throws
+  `Cannot read properties of undefined (reading 'fn')` and the whole page
+  breaks on load. Static-asset curl checks and the FastAPI test suite
+  both stayed green through this — only driving a real browser surfaced
+  it. Fixed by vendoring jQuery and loading it before chessboard.js.
+- `tests/test_api.py` gained `test_root_redirects_to_static_index` and
+  `test_static_frontend_assets_are_served` (checks all vendored files +
+  app JS/CSS resolve to 200) as a permanent regression check for the
+  static-serving wiring.
+- Verified with a headless-Chromium Playwright driver (no project `run`
+  skill existed yet, so used the generic browser-driven pattern; Chromium
+  had to be downloaded — no system browser was preinstalled): loaded the
+  page (zero console errors after the jQuery fix), imported a PGN,
+  dragged a piece on the drill board end-to-end to a "Correct! Next
+  review in 1 day(s)" result, generated + approved engine candidates
+  through the UI, and ran a full game review confirming the blunder
+  classification, eval chart, and click-to-see-board all rendered
+  correctly. Screenshots inspected directly, not just asserted on.

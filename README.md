@@ -54,9 +54,15 @@ python scripts/init_db.py          # first time only, creates data/chess_trainer
 uvicorn chess_trainer.api:app --reload
 ```
 
-Interactive API docs at `http://127.0.0.1:8000/docs`. `DB_PATH` and
-`STOCKFISH_PATH` env vars override the defaults (gitignored `data/`
-directory, `stockfish` on `PATH`).
+Open `http://127.0.0.1:8000/` for the web UI (Drill / Repertoire / Game
+Review tabs), or `http://127.0.0.1:8000/docs` for interactive API docs.
+`DB_PATH` and `STOCKFISH_PATH` env vars override the defaults (gitignored
+`data/` directory, `stockfish` on `PATH`).
+
+The frontend (`static/`) is plain HTML/CSS/vanilla JS — no build step.
+chessboard.js, chess.js, jQuery (chessboard.js's peer dependency), and
+Chart.js are vendored under `static/vendor/` so nothing loads from a CDN
+at runtime.
 
 ## CLI tools
 
@@ -68,4 +74,4 @@ directory, `stockfish` on `PATH`).
 
 ## Status
 
-Phase 5: FastAPI backend. See [PROGRESS.md](PROGRESS.md).
+Phase 6: local web frontend. See [PROGRESS.md](PROGRESS.md).
